@@ -18,6 +18,13 @@ namespace FamilyPhotos.API
                 routeTemplate: "api/{controller}/{id}",
                 defaults: new { id = RouteParameter.Optional });
 
+            config.Routes.MapHttpRoute(
+              name: "AlbumUserName",
+              routeTemplate: "api/{controller}/{action}/{UserName}",
+              defaults: new { UserName = RouteParameter.Optional });
+
+
+
             var jsonFormatter = config.Formatters.OfType<JsonMediaTypeFormatter>().First();
             jsonFormatter.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
         }

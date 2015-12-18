@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using FamilyPhotos.Logic.Services;
 
 namespace FamilyPhotos.Logic
 {
@@ -13,68 +14,124 @@ namespace FamilyPhotos.Logic
     {
         private readonly AlbumsDataAccess dataAccess = new AlbumsDataAccess();
 
-
+        /// <summary>
+        ///  
+        /// </summary>
+        /// <param name="id">id of the album to find</param>
+        /// <returns>
+        ///     Album with the id 
+        /// </returns>
         public Album GetAlbumById(int id)
         {
-            // empty album means error
             Album album = new Album();
             album = dataAccess.GetById(id);
             return album;
-
         }
+
         /// <summary>
-        /// Returns all the albums in the database. 
+        /// Gets all the albums
         /// </summary>
-        /// <returns></returns>
-        public List<Album> GetAllAlbumns()
+        /// <param name="errorFlag">ErrorFlag keeps track of any errors</param>
+        /// <returns> List of all the albums </returns>
+        public List<Album> GetAllAlbumns(out bool errorFlag)
         {
             List<Album> albums = new List<Album>();
-            albums = dataAccess.GetAllAlbumns();
+            albums = dataAccess.GetAllAlbumns(out errorFlag);
             return albums;
         }
 
-        //TODO: dont return the error code, instead write it to a log file!
         /// <summary>
-        ///     Adds an album to the database and filesystem. 
+        /// Gets all the albums for a specified user, given the  UserName
         /// </summary>
-        /// <param name="album"></param> Album to be added 
-        /// <param name="ErrorCode"></param> Error status if a error occurs
-        /// <returns>
-        ///     True: error, check the ErrorCode
-        ///     False: no error 
-        /// </returns>
-        public bool Add(Album album, out string ErrorCode)
+        /// <param name="UserName">Name of the User that we want</param>
+        /// <param name="errorFlag">Keeps track of errors</param>
+        /// <returns>List of all the user's albums</returns>
+        public List<Album> GetAlbumsForUser(string UserName, out bool errorFlag)
+        {
+            List<Album> albums = new List<Album>();
+            albums = dataAccess.GetAllAlbumnsForUser(UserName, out errorFlag);
+            return albums;
+        }
+
+        /// <summary>
+        /// Adds an album to the database
+        /// </summary>
+        /// <param name="album">Album to be added</param>
+        /// <returns>Bool: True: there was an error
+        ///                False: no error 
+        ///</returns>
+        public bool Add(Album album)
         {
             // Verify required properites are set 
-            if(album.Title == null && album.UserId == 0)
+            if (album == null)
             {
-                ErrorCode = "missingInformation";
                 return true;
             }
 
-            string path = "C:/FamilyPhotos.Data/" + album.Title;
+            if (album.Title == null || album.UserName == null)
+            {
+                return true;
+            }
 
-            if (!Directory.Exists(path))
+            // Set the Created date 
+            album.DateCreated = DateTime.Now;
+            album.DateUpdated = album.DateCreated;
+
+            album.DirectoryPath = "C:/FamilyPhotos.Data/" + album.Title;
+
+            if (!Directory.Exists(album.DirectoryPath))
             {
                 // Save to Database
                 if (dataAccess.Add(album))
                 {
-                    ErrorCode = "success";
-                    Directory.CreateDirectory(path);
+                    Directory.CreateDirectory(album.DirectoryPath);
                     return false;
                 }
                 else
                 {
-                    ErrorCode = "databaseError";
                     return true;
                 }
             }
             else
             {
-                ErrorCode = "alreadyExists";
-                return false; 
+                return false;
+            }
+        }
 
-            } 
+        public bool Update(Album albumUpdated)
+        {
+            //Get the original album 
+
+        }
+
+        /// <summary>
+        /// Deletes an album. 
+        /// </summary>
+        /// <param name="id">Id of the album to be deleted</param>
+        /// <returns>Bool: True: there was an error
+        ///                False: no error 
+        ///</returns>
+        public bool Delete(Album album)
+        {
+            // Check if the album exists already
+            if (dataAccess.AlbumExists(album.AlbumId))
+            {
+                if (dataAccess.Delete(album))
+                {
+                    //Delete the directory
+                    FileService fileService = new FileService();
+                    fileService.DeleteDirectory(album.DirectoryPath);
+                    return false;
+                }
+                else
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                return false;
+            }
         }
     }
 }

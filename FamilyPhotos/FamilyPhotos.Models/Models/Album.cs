@@ -11,7 +11,8 @@ namespace FamilyPhotos.Models
         public int AlbumId { get; set; }
         public string Title { get; set; }
         public string Description { get; set;}
-        public int UserId { get; set; }
+        public string UserName { get; set; }
+        public string DirectoryPath { get; set; }
 
         [Column(TypeName = "DateTime2")]
         public DateTime DateCreated { get; set;}

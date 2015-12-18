@@ -10,6 +10,17 @@ namespace FamilyPhotos.DataAccess
     {
         private readonly FamilyPhotosDB _db = new FamilyPhotosDB();
 
+        public Album GetByTitle(string Title)
+        {
+            try
+            {
+                Album Album = _db.Albums.SingleOrDefault(album => album.Title == Title);
+            }
+            catch(Exception e)
+            {
+                
+            }
+        }
         public Album GetById(int id)
         {
             Album album = new Album();
@@ -26,12 +37,37 @@ namespace FamilyPhotos.DataAccess
             return album;
         }
 
+        public List<Album> GetAllAlbumns(out bool errorFlag)
+        {
+            errorFlag = false;
+            try
+            {
+                IQueryable<Album> albums = _db.Set<Album>();
+                return albums.ToList();
+            }
+            catch (Exception e)
+            {
+                errorFlag = true;
+                Debug.WriteLine(e.Message);
+                return new List<Album>();
+            }
+        }
+        
+        //TODO: NOT DONE YET
+        public List<Album> GetAllAlbumnsForUser(string UserName, out bool errorFlag)
+        {
+            errorFlag = false;
+            List<Album> albums = new List<Album>();
+            return albums;
+            
+        }
+
         public bool Delete(int id)
         {
             try
             {
                 //Instead of querying the DB, create a temp Album with same id
-                Album album= new Album(id);
+                Album album = new Album(id);
                 _db.Albums.Remove(album);
                 _db.SaveChanges();
             }
@@ -43,22 +79,6 @@ namespace FamilyPhotos.DataAccess
 
             return true;
         }
-
-        public List<Album> GetAllAlbumns()
-        {
-            //List<Album> albums = new List<Album>();
-            try
-            {
-                IQueryable<Album> albums = _db.Set<Album>();
-                return albums.ToList();
-            }
-            catch (Exception e)
-            {
-                Debug.WriteLine(e.Message);
-                return new List<Album>();
-            }
-        }
-
         public bool Delete(Album album)
         {
             try
@@ -106,6 +126,30 @@ namespace FamilyPhotos.DataAccess
             }
 
             return true;
+        }
+
+        public bool AlbumExists(int id)
+        {
+            Album album = new Album();
+            try
+            {
+                album = _db.Albums.Find(id);
+
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e.Message);
+                return false;
+            }
+
+            if (album == null)
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
         }
 
         public bool Add(Album album)
