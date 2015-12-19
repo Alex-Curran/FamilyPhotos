@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using FamilyPhotos.Logic.Services;
+using FamilyPhotos.Models.ViewModels;
 
 namespace FamilyPhotos.Logic
 {
@@ -14,13 +15,6 @@ namespace FamilyPhotos.Logic
     {
         private readonly AlbumsDataAccess dataAccess = new AlbumsDataAccess();
 
-        /// <summary>
-        ///  
-        /// </summary>
-        /// <param name="id">id of the album to find</param>
-        /// <returns>
-        ///     Album with the id 
-        /// </returns>
         public Album GetAlbumById(int id)
         {
             Album album = new Album();
@@ -28,16 +22,27 @@ namespace FamilyPhotos.Logic
             return album;
         }
 
-        /// <summary>
-        /// Gets all the albums
-        /// </summary>
-        /// <param name="errorFlag">ErrorFlag keeps track of any errors</param>
-        /// <returns> List of all the albums </returns>
-        public List<Album> GetAllAlbumns(out bool errorFlag)
+        public Result<List<AlbumViewModel>> GetAllAlbums()
         {
-            List<Album> albums = new List<Album>();
-            albums = dataAccess.GetAllAlbumns(out errorFlag);
-            return albums;
+            Result<List<Album>> result = new Result<List<Album>>();
+            Result<List<AlbumViewModel>> viewModelResult = new Result<List<AlbumViewModel>>();
+
+            result = dataAccess.GetAllAlbums();
+
+            //Convert from album to albumViewModel
+            if (result.Success)
+            {
+                foreach (Album album in result.Data)
+                {
+                    viewModelResult.Data.Add(AlbumService.ConvertAlbumToAlbumViewModel(album));
+                }
+            }
+
+            viewModelResult.Success = result.Success;
+            viewModelResult.InternalError = result.InternalError;
+            viewModelResult.ErrorMessage = result.ErrorMessage;
+
+            return viewModelResult;
         }
 
         /// <summary>
@@ -53,55 +58,73 @@ namespace FamilyPhotos.Logic
             return albums;
         }
 
-        /// <summary>
-        /// Adds an album to the database
-        /// </summary>
-        /// <param name="album">Album to be added</param>
-        /// <returns>Bool: True: there was an error
-        ///                False: no error 
-        ///</returns>
-        public bool Add(Album album)
+        public Result Add(Album album)
         {
+            Result result = new Result();
+            FileService fileService = new FileService();
+
             // Verify required properites are set 
             if (album == null)
             {
-                return true;
+                result.Success = false;
+                result.ErrorMessage = "Album is null";
+                return result;
+            }
+            else if (album.Title == null)
+            {
+                result.Success = false;
+                result.ErrorMessage = "Album Title is null";
+                return result;
             }
 
-            if (album.Title == null || album.UserName == null)
+            // Create the directory in the file system
+            string directoryPath = fileService.createDirectory(album.Title);
+            if(directoryPath != null)
             {
-                return true;
-            }
-
-            // Set the Created date 
-            album.DateCreated = DateTime.Now;
-            album.DateUpdated = album.DateCreated;
-
-            album.DirectoryPath = "C:/FamilyPhotos.Data/" + album.Title;
-
-            if (!Directory.Exists(album.DirectoryPath))
-            {
-                // Save to Database
-                if (dataAccess.Add(album))
-                {
-                    Directory.CreateDirectory(album.DirectoryPath);
-                    return false;
-                }
-                else
-                {
-                    return true;
-                }
+                album.DirectoryPath = directoryPath;
             }
             else
             {
-                return false;
+                result.Success = false;
+                result.InternalError = true;
+                result.ErrorMessage = "Error Creating Directory";
+                return result;
             }
+
+            //Update the date created and date updated properties
+            album.DateCreated = DateTime.Now;
+            album.DateUpdated = album.DateCreated;
+
+            // Save to Database
+            result = dataAccess.Add(album);
+            return result;
         }
 
-        public bool Update(Album albumUpdated)
+        public Result Update(Album updatedAlbum)
         {
             //Get the original album 
+            Album originalAlbum = dataAccess.GetByTitle(updatedAlbum.Title);
+            FileService fileService = new FileService();
+            Result result = new Result();
 
+            if(originalAlbum == null)
+            {
+                result.Success = false;
+                result.ErrorMessage = "Album not found ";
+                return result;  
+            }
+
+            if(updatedAlbum.Title != originalAlbum.Title)
+            {
+                updatedAlbum.DirectoryPath = fileService.UpdateDirectory(updatedAlbum.Title);
+            }
+            updatedAlbum.DateUpdated = DateTime.Now;
+
+
+            //Update the album in the database 
+            result = dataAccess.Update(updatedAlbum, originalAlbum);   
+            //if(result.Success == true && updatedAlbum.)         
+            return result; 
         }
 
         /// <summary>

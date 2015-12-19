@@ -10,6 +10,7 @@ namespace FamilyPhotos.Logic.Services
 {
     public class FileService
     {
+        string rootDirectory = @"C:\FamilyPhotos.Data\";
         public bool DeleteDirectory(string path)
         {
             try
@@ -30,6 +31,26 @@ namespace FamilyPhotos.Logic.Services
                 return false;
             }
 
+        }
+
+        internal string UpdateDirectory(string title)
+        {
+            return rootDirectory + title;
+        }
+
+        internal string createDirectory(string title)
+        {
+            string directoryPath = rootDirectory + title;
+            if (!Directory.Exists(directoryPath))
+            {
+                Directory.CreateDirectory(directoryPath);
+                return directoryPath;
+            }
+            else
+            {
+                directoryPath = null;
+                return directoryPath;   
+            }
         }
     }
 }

@@ -10,16 +10,42 @@ namespace FamilyPhotos.DataAccess
     {
         private readonly FamilyPhotosDB _db = new FamilyPhotosDB();
 
-        public Album GetByTitle(string Title)
+        public Result<List<Album>> GetAllAlbums()
         {
+            Result<List<Album>> result = new Result<List<Album>>();
+
             try
             {
-                Album Album = _db.Albums.SingleOrDefault(album => album.Title == Title);
+                IQueryable<Album> albums = _db.Set<Album>();
+                result.Data = albums.ToList();
+            }
+            catch (Exception e)
+            {
+                Debug.WriteLine(e.Message);
+                result.Success = false;
+                result.InternalError = true;
+                result.ErrorMessage = "Error retrieving from the database";
+                return result;
+            }
+
+            result.Success = true;
+            return result;
+        }
+
+        public Album GetByTitle(string Title)
+        {
+            Album album = new Album();
+            try
+            {
+                album = _db.Albums.SingleOrDefault(a => a.Title == Title);
             }
             catch(Exception e)
             {
-                
+                Debug.WriteLine(e.Message);
+                return album;
             }
+
+            return album;
         }
         public Album GetById(int id)
         {
@@ -37,21 +63,7 @@ namespace FamilyPhotos.DataAccess
             return album;
         }
 
-        public List<Album> GetAllAlbumns(out bool errorFlag)
-        {
-            errorFlag = false;
-            try
-            {
-                IQueryable<Album> albums = _db.Set<Album>();
-                return albums.ToList();
-            }
-            catch (Exception e)
-            {
-                errorFlag = true;
-                Debug.WriteLine(e.Message);
-                return new List<Album>();
-            }
-        }
+        
         
         //TODO: NOT DONE YET
         public List<Album> GetAllAlbumnsForUser(string UserName, out bool errorFlag)
@@ -95,8 +107,10 @@ namespace FamilyPhotos.DataAccess
             return true;
         }
 
-        public bool Update(Album updatedAlbum, Album originalAlbum)
+        public Result Update(Album updatedAlbum, Album originalAlbum)
         {
+            Result result = new Result();
+
             try
             {
                 _db.Entry(originalAlbum).CurrentValues.SetValues(updatedAlbum);
@@ -105,14 +119,19 @@ namespace FamilyPhotos.DataAccess
             catch (Exception e)
             {
                 Debug.WriteLine(e.Message);
-                return false;
+
+                result.Success = false;
+                result.ErrorMessage = e.Message;
+                return result;
             }
 
-            return true;
+            result.Success = true;
+            return result;
         }
 
-        public bool Update(Album updatedAlbum, int originalAlbumId)
+        public Result Update(Album updatedAlbum, int originalAlbumId)
         {
+            Result result = new Result();
             try
             {
                 Album originalAlbum = GetById(originalAlbumId);
@@ -122,10 +141,13 @@ namespace FamilyPhotos.DataAccess
             catch (Exception e)
             {
                 Debug.WriteLine(e.Message);
-                return false;
+
+                result.Success = false;
+                result.ErrorMessage = e.Message;
+                return result;
             }
 
-            return true;
+            return result;
         }
 
         public bool AlbumExists(int id)
@@ -152,8 +174,9 @@ namespace FamilyPhotos.DataAccess
             }
         }
 
-        public bool Add(Album album)
+        public Result Add(Album album)
         {
+            Result result = new Result();
             try
             {
                 _db.Albums.Add(album);
@@ -162,10 +185,15 @@ namespace FamilyPhotos.DataAccess
             catch (Exception e)
             {
                 Debug.Write(e.Message);
-                return false;
+
+                result.Success = false;
+                result.InternalError = true;
+                result.ErrorMessage = "Error writing the database " + e.Message; 
+                return result;
             }
 
-            return true;
+            result.Success = true;
+            return result;
         }
 
         public bool SaveDB()
