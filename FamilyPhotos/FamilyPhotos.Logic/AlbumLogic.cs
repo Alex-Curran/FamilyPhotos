@@ -15,17 +15,12 @@ namespace FamilyPhotos.Logic
     {
         private readonly AlbumsDataAccess dataAccess = new AlbumsDataAccess();
 
-        public Album GetAlbumById(int id)
-        {
-            Album album = new Album();
-            album = dataAccess.GetById(id);
-            return album;
-        }
-
+        // Returns all the albums in the database as an albumViewModel
         public Result<List<AlbumViewModel>> GetAllAlbums()
         {
             Result<List<Album>> result = new Result<List<Album>>();
             Result<List<AlbumViewModel>> viewModelResult = new Result<List<AlbumViewModel>>();
+            viewModelResult.Data = new List<AlbumViewModel>();
 
             result = dataAccess.GetAllAlbums();
 
@@ -45,17 +40,30 @@ namespace FamilyPhotos.Logic
             return viewModelResult;
         }
 
-        /// <summary>
-        /// Gets all the albums for a specified user, given the  UserName
-        /// </summary>
-        /// <param name="UserName">Name of the User that we want</param>
-        /// <param name="errorFlag">Keeps track of errors</param>
-        /// <returns>List of all the user's albums</returns>
-        public List<Album> GetAlbumsForUser(string UserName, out bool errorFlag)
+        //Returns the album with the given id as AlbumViewModel
+        public Result<AlbumViewModel> GetAlbumById(int id)
         {
+            Result<Album> result = new Result<Album>();
+            Result<AlbumViewModel> resultViewModel = new Result<AlbumViewModel>();
+            result.Data = new Album();
+            resultViewModel.Data = new AlbumViewModel();
+
+            //TODO seperate internal and bad request error. Check if exists? or throw specific exception down under?
+  
+            result = dataAccess.GetById(id);
+
+            resultViewModel.Data = AlbumService.ConvertAlbumToAlbumViewModel(result.Data);
+            resultViewModel.Success = true;
+            return resultViewModel;
+        }
+
+        public Result<List<Album>> GetAlbumsForUser(string UserName)
+        {
+            Result<List<Album>> result = new Result<List<Album>>();
             List<Album> albums = new List<Album>();
-            albums = dataAccess.GetAllAlbumnsForUser(UserName, out errorFlag);
-            return albums;
+
+            result = dataAccess.GetAllAlbumsForUser(UserName);
+            return result;
         }
 
         public Result Add(Album album)
@@ -100,6 +108,38 @@ namespace FamilyPhotos.Logic
             return result;
         }
 
+        public Result Delete(Album album)
+        {
+            Result result = new Result();
+
+            // Check if the album exists already
+            if (dataAccess.AlbumExists(album.AlbumId))
+            {
+                result = dataAccess.Delete(album);
+
+                if (result.Success)
+                {
+                    //Delete the directory
+                    FileService fileService = new FileService();
+                    fileService.DeleteDirectory(album.DirectoryPath);
+                    result.Success = true;
+
+                    return result; 
+                }
+                else
+                {
+                    return result; 
+                }
+            }
+            else
+            {
+                result.Success = false;
+                result.ErrorMessage = "Album does not exist";
+                return result;
+            }
+        }
+
+        //TODO: NOT DONE
         public Result Update(Album updatedAlbum)
         {
             //Get the original album 
@@ -107,14 +147,14 @@ namespace FamilyPhotos.Logic
             FileService fileService = new FileService();
             Result result = new Result();
 
-            if(originalAlbum == null)
+            if (originalAlbum == null)
             {
                 result.Success = false;
                 result.ErrorMessage = "Album not found ";
-                return result;  
+                return result;
             }
 
-            if(updatedAlbum.Title != originalAlbum.Title)
+            if (updatedAlbum.Title != originalAlbum.Title)
             {
                 updatedAlbum.DirectoryPath = fileService.UpdateDirectory(updatedAlbum.Title);
             }
@@ -122,39 +162,9 @@ namespace FamilyPhotos.Logic
 
 
             //Update the album in the database 
-            result = dataAccess.Update(updatedAlbum, originalAlbum);   
+            result = dataAccess.Update(updatedAlbum, originalAlbum);
             //if(result.Success == true && updatedAlbum.)         
-            return result; 
-        }
-
-        /// <summary>
-        /// Deletes an album. 
-        /// </summary>
-        /// <param name="id">Id of the album to be deleted</param>
-        /// <returns>Bool: True: there was an error
-        ///                False: no error 
-        ///</returns>
-        public bool Delete(Album album)
-        {
-            // Check if the album exists already
-            if (dataAccess.AlbumExists(album.AlbumId))
-            {
-                if (dataAccess.Delete(album))
-                {
-                    //Delete the directory
-                    FileService fileService = new FileService();
-                    fileService.DeleteDirectory(album.DirectoryPath);
-                    return false;
-                }
-                else
-                {
-                    return true;
-                }
-            }
-            else
-            {
-                return false;
-            }
+            return result;
         }
     }
 }
