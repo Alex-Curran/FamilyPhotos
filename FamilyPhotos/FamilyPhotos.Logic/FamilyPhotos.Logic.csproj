@@ -44,7 +44,7 @@
     <Compile Include="PhotoLogic.cs" />
     <Compile Include="Services\AlbumService.cs" />
     <Compile Include="Services\FileService.cs" />
-    <Compile Include="Services\PhotoServices.cs" />
+    <Compile Include="Services\PhotoService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UserLogic.cs" />
   </ItemGroup>

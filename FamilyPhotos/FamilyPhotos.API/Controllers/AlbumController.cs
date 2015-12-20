@@ -78,6 +78,31 @@ namespace FamilyPhotos.API.Controllers
 
         }
 
+        //GET: 
+        // Returns photos in an album
+        [HttpGet]
+        [Route("api/Album/{albumId}/Photos")]
+        public IHttpActionResult Photos(int albumId)
+        {
+            PhotoLogic photoLogic = new PhotoLogic();
+            Result<List<PhotoViewModel>> result = new Result<List<PhotoViewModel>>();
+
+            result = photoLogic.GetForAlbum(albumId);
+
+            if (result.Success)
+            {
+                return Ok(result.Data);
+            }
+            else if (result.InternalError)
+            {
+                return new HttpActionResult(HttpStatusCode.InternalServerError, result.ErrorMessage);
+            }
+            else
+            {
+                return new HttpActionResult(HttpStatusCode.BadRequest, result.ErrorMessage);
+            }
+        }
+
         // POST: api/Album
         // Creates an Album
         public IHttpActionResult Post([FromBody]Album album)

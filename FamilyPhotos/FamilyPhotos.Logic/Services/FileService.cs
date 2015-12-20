@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using FamilyPhotos.Models;
 
 namespace FamilyPhotos.Logic.Services
 {
@@ -52,5 +53,6 @@ namespace FamilyPhotos.Logic.Services
                 return directoryPath;   
             }
         }
+
     }
 }

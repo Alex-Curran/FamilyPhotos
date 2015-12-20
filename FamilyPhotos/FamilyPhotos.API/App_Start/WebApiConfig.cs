@@ -23,8 +23,6 @@ namespace FamilyPhotos.API
               routeTemplate: "api/{controller}/{action}/{UserName}",
               defaults: new { UserName = RouteParameter.Optional });
 
-
-
             var jsonFormatter = config.Formatters.OfType<JsonMediaTypeFormatter>().First();
             jsonFormatter.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
         }

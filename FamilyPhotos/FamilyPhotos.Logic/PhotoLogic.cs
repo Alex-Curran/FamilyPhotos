@@ -1,5 +1,8 @@
 ﻿using FamilyPhotos.Models;
 using FamilyPhotos.DataAccess;
+using System;
+using System.Collections.Generic;
+using FamilyPhotos.Logic.Services;
 
 namespace FamilyPhotos.Logic
 {
@@ -7,91 +10,79 @@ namespace FamilyPhotos.Logic
     {
         private readonly PhotosDataAccess dataAccess = new PhotosDataAccess();
 
-        public Photo GetById(int id)
+        public Result<PhotoViewModel> GetById(int id)
         {
-            Photo photo = new Photo();
-            if (id > 1)
+            Result<PhotoViewModel> resultViewModel = new Result<PhotoViewModel>();
+            Result<Photo> result = new Result<Photo>();
+
+            if(id < 1)
             {
-                photo = dataAccess.GetById(id);
-                return photo;
+                resultViewModel.Success = false;
+                resultViewModel.ErrorMessage = "Invalid Id";
+                return resultViewModel;
+            }
+
+            result = dataAccess.GetById(id);
+           
+            resultViewModel.Data = PhotoService.ConvertPhotoToPhotoViewModel(result.Data);
+
+            return resultViewModel;
+        }
+
+        public Result<List<PhotoViewModel>> GetForAlbum(int albumId)
+        {
+            Result<List<PhotoViewModel>> resultViewModel = new Result<List<PhotoViewModel>>();
+            Result<List<Photo>> result = new Result<List<Photo>>();
+
+            result = dataAccess.GetForAlbum(albumId);
+            
+            if (result.Success && result.Data != null)
+            {
+                foreach(var photo in result.Data)
+                {
+                    resultViewModel.Data.Add(PhotoService.ConvertPhotoToPhotoViewModel(photo));
+                }
+
+                return resultViewModel;
             }
             else
             {
-                return photo;
+                resultViewModel.Success = false;
+                resultViewModel.ErrorMessage = "Error";
+                return resultViewModel;
             }
         }
-        public bool Add(Photo photo)
+
+        public Result Add(PhotoViewModel photoViewModel)
         {
-            // Verfify the properties of Photo
-            //PhotoServices ps = new PhotoServices();
-            // Create Thumbnail
-            //Photo thumbnail = ps.CreateThumbnail(photo);
+            Photo photo = PhotoService.ConvertPhotoViewModelToPhoto(photoViewModel);
+            //TODO: Set the path, and save to the disk
 
-            // Save thumb and original to the disk
-            //ps.SavePhoto(photo, thumbnail);
+            Result result = dataAccess.Add(photo);
 
-            // Try saving
-            if (dataAccess.Add(photo))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
+            return result; 
         }
 
-        public bool Delete(Photo photo)
-        {
-            if (dataAccess.Delete(photo))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
+        //public bool Delete(Photo photo)
+        //{
 
-        public bool Delete(int PhotoId)
-        {
-            Photo photo = new Photo(PhotoId);
+        //}
 
-            if (dataAccess.Delete(photo))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
+        //public bool Delete(int PhotoId)
+        //{
 
-        public bool Update(Photo updatedPhoto, Photo originalPhoto)
-        {
-            if (dataAccess.Update(updatedPhoto, originalPhoto))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
+        //}
 
-        public bool Update(Photo updatedPhoto, int originalPhotoId)
-        {
-            Photo originalPhoto = new Photo(originalPhotoId);
+        //public bool Update(Photo updatedPhoto, Photo originalPhoto)
+        //{
 
-            if (dataAccess.Update(updatedPhoto, originalPhoto))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
+
+        //}
+
+        //public bool Update(Photo updatedPhoto, int originalPhotoId)
+        //{
+
+        //}
 
     }
 }
