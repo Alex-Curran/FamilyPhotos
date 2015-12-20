@@ -12,7 +12,8 @@ namespace FamilyPhotos.Logic.Services
     public class FileService
     {
         string rootDirectory = @"C:\FamilyPhotos.Data\";
-        public bool DeleteDirectory(string path)
+
+        internal bool DeleteDirectory(string path)
         {
             try
             {

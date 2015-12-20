@@ -1,5 +1,6 @@
 ﻿using System;
 using FamilyPhotos.Models;
+using System.IO;
 
 namespace FamilyPhotos.Logic.Services
 {
@@ -33,6 +34,30 @@ namespace FamilyPhotos.Logic.Services
             };
 
             return photo;
+        }
+
+        internal static string SetFilePath(string albumPath, string photoName)
+        {
+            string path = albumPath + "/" + photoName;
+            return path;
+        }
+
+        internal static void SavePhoto(string path, Stream stream)
+        {
+            using (Stream file = File.Create(path))
+            {
+                CopyStream(stream, file);
+            }
+        }
+
+        private static void CopyStream(Stream input, Stream output)
+        {
+            byte[] buffer = new byte[8 * 1024];
+            int len;
+            while ((len = input.Read(buffer, 0, buffer.Length)) > 0)
+            {
+                output.Write(buffer, 0, len);
+            }
         }
     }
 }

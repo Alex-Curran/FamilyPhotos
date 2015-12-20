@@ -1,6 +1,7 @@
 ﻿using FamilyPhotos.Logic;
 using FamilyPhotos.Models;
 using System.Net;
+using System.Web;
 using System.Web.Http;
 
 namespace FamilyPhotos.API.Controllers
@@ -32,13 +33,62 @@ namespace FamilyPhotos.API.Controllers
            
         }
 
-
         // POST: api/photo
-        // Saves Photo
-        //public IHttpActionResult POST(PhotoViewModel photoViewModel)
-        //{
+        public IHttpActionResult POST(PhotoViewModel photoViewModel, HttpPostedFileBase postedFile)
+        {
+            Result result = logic.Add(photoViewModel);
 
-           
-        //}
+            if (result.Success)
+            {
+                return Ok();
+            }
+            else if (result.InternalError)
+            {
+                return new HttpActionResult(HttpStatusCode.InternalServerError, result.ErrorMessage);
+            }
+            else
+            {
+                return new HttpActionResult(HttpStatusCode.BadRequest, result.ErrorMessage);
+            }
+        }
+
+        //DELETE: api/Photo
+        public IHttpActionResult DELETE(PhotoViewModel photoViewModel)
+        {
+            Result result = logic.Delete(photoViewModel);
+
+            if (result.Success)
+            {
+                return Ok();
+            }
+            else if (result.InternalError)
+            {
+                return new HttpActionResult(HttpStatusCode.InternalServerError, result.ErrorMessage);
+            }
+            else
+            {
+                return new HttpActionResult(HttpStatusCode.BadRequest, result.ErrorMessage);
+            }
+        }
+
+
+        //PUT: api/Photo
+        public IHttpActionResult PUT(PhotoViewModel photoViewModel)
+        {
+            Result result = logic.Update(photoViewModel);
+
+            if (result.Success)
+            {
+                return Ok();
+            }
+            else if (result.InternalError)
+            {
+                return new HttpActionResult(HttpStatusCode.InternalServerError, result.ErrorMessage);
+            }
+            else
+            {
+                return new HttpActionResult(HttpStatusCode.BadRequest, result.ErrorMessage);
+            }
+        }
     }
 }

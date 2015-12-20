@@ -139,6 +139,14 @@ namespace FamilyPhotos.Logic
             }
         }
 
+        public Result<string> GetAlbumPath(int AlbumId)
+        {
+            Result<string> result = new Result<String>();
+
+            return dataAccess.GetAlbumPath(AlbumId);
+        }
+
+
         //TODO: NOT DONE
         public Result Update(Album updatedAlbum)
         {

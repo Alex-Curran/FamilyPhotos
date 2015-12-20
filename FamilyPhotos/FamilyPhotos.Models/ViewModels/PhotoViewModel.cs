@@ -1,8 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.IO;
+using System.Web;
 
 namespace FamilyPhotos.Models
 {
@@ -14,6 +12,7 @@ namespace FamilyPhotos.Models
         public string Title { get; set; }
         public string Description { get; set; }
         public DateTime DateUploaded { get; set;}
-
+        public Stream File { get; set; }
+        
     }
 }

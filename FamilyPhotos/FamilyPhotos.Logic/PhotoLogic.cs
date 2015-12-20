@@ -5,9 +5,10 @@ using System.Collections.Generic;
 using FamilyPhotos.Logic.Services;
 
 namespace FamilyPhotos.Logic
-{
+{ 
     public class PhotoLogic
     {
+
         private readonly PhotosDataAccess dataAccess = new PhotosDataAccess();
 
         public Result<PhotoViewModel> GetById(int id)
@@ -15,7 +16,7 @@ namespace FamilyPhotos.Logic
             Result<PhotoViewModel> resultViewModel = new Result<PhotoViewModel>();
             Result<Photo> result = new Result<Photo>();
 
-            if(id < 1)
+            if (id < 1)
             {
                 resultViewModel.Success = false;
                 resultViewModel.ErrorMessage = "Invalid Id";
@@ -23,7 +24,7 @@ namespace FamilyPhotos.Logic
             }
 
             result = dataAccess.GetById(id);
-           
+
             resultViewModel.Data = PhotoService.ConvertPhotoToPhotoViewModel(result.Data);
 
             return resultViewModel;
@@ -35,15 +36,16 @@ namespace FamilyPhotos.Logic
             Result<List<Photo>> result = new Result<List<Photo>>();
 
             result = dataAccess.GetForAlbum(albumId);
-            
-            if (result.Success && result.Data != null)
-            {
-                foreach(var photo in result.Data)
+
+           if (result.Success && result.Data != null)
+           {
+                foreach (var photo in result.Data)
                 {
                     resultViewModel.Data.Add(PhotoService.ConvertPhotoToPhotoViewModel(photo));
                 }
 
-                return resultViewModel;
+            return resultViewModel;
+
             }
             else
             {
@@ -53,36 +55,68 @@ namespace FamilyPhotos.Logic
             }
         }
 
-        public Result Add(PhotoViewModel photoViewModel)
+        public Result Delete(PhotoViewModel photoViewModel)
         {
             Photo photo = PhotoService.ConvertPhotoViewModelToPhoto(photoViewModel);
-            //TODO: Set the path, and save to the disk
+            Result result = dataAccess.Delete(photo);
 
-            Result result = dataAccess.Add(photo);
-
-            return result; 
+            if (result.Success)
+            {
+                //TODO: Delete from tthe file system
+                return result;
+            }
+            else
+            {
+                return result;
+            }
         }
 
-        //public bool Delete(Photo photo)
-        //{
+        public Result Update(PhotoViewModel photoViewModel)
+        {
 
-        //}
+            Result result = new Result();
+            return result;
 
-        //public bool Delete(int PhotoId)
-        //{
+            //Get the original photo
+            //Result<Photo> originalPhoto = dataAccess.GetById(photoViewModel.PhotoId);
 
-        //}
+            //if (!originalPhoto.Success)
+            //{
+            //    result.ErrorMessage = originalPhoto.ErrorMessage;
+            //    result.InternalError = originalPhoto.InternalError;
+            //    return result;
+            //}
+            //else if(originalPhoto.Data != null)
+            //{
+            //    result.Success = false;
+            //    result.ErrorMessage = "Photo not found";
+            //    return result;
+            //}
+            //else
+            //{
 
-        //public bool Update(Photo updatedPhoto, Photo originalPhoto)
-        //{
+         //}
+        }
 
+        public Result Add(PhotoViewModel photoViewModel)
+    {
+        Result result = new Result();
+        Photo photo = PhotoService.ConvertPhotoViewModelToPhoto(photoViewModel);
+        AlbumLogic albumLogic = new AlbumLogic();
+        Result<string> AlbumPathResult = albumLogic.GetAlbumPath(photoViewModel.AlbumId);
 
-        //}
+        if (!AlbumPathResult.Success)
+        {
+            result.Success = false;
+            result.ErrorMessage = AlbumPathResult.ErrorMessage;
+            return result;
+        }
 
-        //public bool Update(Photo updatedPhoto, int originalPhotoId)
-        //{
+        photo.FilePath_Original = PhotoService.SetFilePath(AlbumPathResult.Data, photo.Title);
+        result = dataAccess.Add(photo);
 
-        //}
-
+        return result;
     }
+
+}
 }

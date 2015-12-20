@@ -162,6 +162,41 @@ namespace FamilyPhotos.DataAccess
             result.Success = true;
             return result;
         }
+
+        public Result<string> GetAlbumPath(int AlbumId)
+        {
+            string AlbumPath = "";
+            Result<string> result = new Result<string>();
+
+            try
+            {
+                var album = _db.Albums.SingleOrDefault(a => a.AlbumId == AlbumId);
+                if (album != null)
+                {
+                    AlbumPath = album.DirectoryPath;
+                    result.Data = AlbumPath;
+                }
+                else
+                {
+                    result.Success = false;
+                    result.ErrorMessage = "Album does not exist!";
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.Write(e.Message);
+                result.Success = false;
+                result.InternalError = true;
+                result.ErrorMessage = "Error Accessing the database";
+                result.Data = "";
+
+                return result; 
+            }
+
+            result.Success = false;
+            return result;
+        }
+
         public Result Delete(Album album)
         {
             Result result = new Result();
