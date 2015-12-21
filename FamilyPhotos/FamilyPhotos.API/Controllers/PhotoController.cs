@@ -34,8 +34,9 @@ namespace FamilyPhotos.API.Controllers
         }
 
         // POST: api/photo
-        public IHttpActionResult POST(PhotoViewModel photoViewModel, HttpPostedFileBase postedFile)
+        public IHttpActionResult POST(PhotoViewModel photoViewModel, HttpPostedFileBase fileBase)
         {
+            
             Result result = logic.Add(photoViewModel);
 
             if (result.Success)

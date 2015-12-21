@@ -12,6 +12,7 @@ namespace FamilyPhotos.Models
         public string Title { get; set; }
         public string Description { get; set; }
         public DateTime DateUploaded { get; set;}
+        public HttpPostedFileBase httpPostedFileBase { get; set; }
         public Stream File { get; set; }
         
     }
